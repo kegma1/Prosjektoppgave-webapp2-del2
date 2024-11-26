@@ -1,0 +1,90 @@
+@page "/login"
+@using System.ComponentModel.DataAnnotations
+@rendermode InteractiveServer
+@using System.Net.Http
+@using System.Net.Http.Json
+@inject HttpClient Http
+
+<PageTitle>Login</PageTitle>
+
+<h1>Login</h1>
+
+
+<EditForm  Model="Model" OnValidSubmit="Submit">
+    <DataAnnotationsValidator />
+    <AntiforgeryToken />
+    <div class="form-group">
+        <label>
+            Username:
+            <InputText class="form-control" @bind-Value="Model!.Username" />
+        </label>
+         <ValidationMessage For="@(() => Model!.Username)" />
+    </div>
+    <div class="form-group">
+        <label>
+            Password:
+            <InputText class="form-control" type="password" placeholder="Password" @bind-Value="Model!.Password" />
+        </label>
+         <ValidationMessage For="@(() => Model!.Password)" />
+    </div>
+
+    <button type="submit"class="btn btn-primary">Login</button>
+    
+
+    @if (!string.IsNullOrEmpty(LoginMessage)) {
+        <p>@LoginMessage</p>
+    }
+</EditForm>
+
+@code {
+    [SupplyParameterFromForm]
+    private LoginModel? Model { get; set; }
+    private string? LoginMessage { get; set; }
+
+    protected override void OnInitialized() => Model ??= new();
+
+    private async Task Submit() {
+        if (!ValidateModel()) {
+            LoginMessage = "fill shit out";
+            return;
+        }
+
+        var LoginDetails = new {
+            username = Model?.Username,
+            password = Model?.Password,
+        };
+        try {
+            var res = await Http.PostAsJsonAsync("Auth/login", LoginDetails);
+            
+            if (res.IsSuccessStatusCode) {
+                var content = await res.Content.ReadFromJsonAsync<Token>() ?? new Token();
+                Console.WriteLine(content.token);
+
+                LoginMessage = "Login succsessful!";
+            } else {
+                LoginMessage = "Login failed. Please check your credentials.";
+            }
+        } catch (Exception ex) {
+            LoginMessage = $"An error occurred: {ex.Message}";
+        }
+    }
+
+    private bool ValidateModel() {
+        if (Model is null) return false;
+
+        var context = new ValidationContext(Model);
+        var results = new List<ValidationResult>();
+        return Validator.TryValidateObject(Model, context, results, true); 
+    }
+
+    private class Token {
+        public string? token { get; set; }
+    }
+
+    public class LoginModel {
+        [Required(ErrorMessage = "Username is required")]
+        public string? Username { get; set; }
+        [Required(ErrorMessage = "Password is required")]
+        public string? Password { get; set; }
+    }
+}
