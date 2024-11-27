@@ -13,8 +13,6 @@ builder.Services.AddScoped(sp =>
     });
 builder.Services.AddHttpClient();
 
-builder.Services.AddAuthorizationCore();
-
 var app = builder.Build();
 
 // Configure the HTTP request pipeline.

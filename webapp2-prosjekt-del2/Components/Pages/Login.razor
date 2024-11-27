@@ -4,6 +4,9 @@
 @using System.Net.Http
 @using System.Net.Http.Json
 @inject HttpClient Http
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+@inject NavigationManager Navigation
 
 <PageTitle>Login</PageTitle>
 
@@ -60,7 +63,11 @@
                 var content = await res.Content.ReadFromJsonAsync<Token>() ?? new Token();
                 Console.WriteLine(content.token);
 
+                await ProtectedLocalStore.SetAsync("token", content.token!);
+                await ProtectedLocalStore.SetAsync("username", Model?.Username!);
+                
                 LoginMessage = "Login succsessful!";
+                Navigation.NavigateTo("/", forceLoad: true);
             } else {
                 LoginMessage = "Login failed. Please check your credentials.";
             }

@@ -1,7 +1,33 @@
 ﻿@page "/"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+@using webapp2_prosjekt_del2.Components.Shared
 
 <PageTitle>Home</PageTitle>
 
-<h1>Hello, world!</h1>
+@if (!string.IsNullOrEmpty(Username)) {
+    <h1>Welcome, @Username</h1>
+    <FileBrowser Path="/" />
+} else {
+    <h1>Hello, world!</h1>
+    <a href="login">Login</a>
+}
 
-Welcome to your new app.
+@code {
+    private string? Username { get; set; }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await GetUsername();
+            StateHasChanged();
+        }
+    }
+
+    private async Task GetUsername() {
+        var result = await ProtectedLocalStore.GetAsync<string>("username");
+        Username = result.Success ? result.Value : null;
+        Console.WriteLine("THIS IS THE USER NAME:    " + Username);
+    }
+}
