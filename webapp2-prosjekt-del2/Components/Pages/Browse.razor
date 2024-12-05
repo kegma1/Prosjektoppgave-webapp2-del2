@@ -1,20 +1,24 @@
-﻿@page "/"
+@page "/Browse/{**Path}"
 @using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
 @inject ProtectedLocalStorage ProtectedLocalStore
 @using webapp2_prosjekt_del2.Components.Shared
 
-<PageTitle>Home</PageTitle>
+<PageTitle>Browse</PageTitle>
 
 @if (!string.IsNullOrEmpty(Username)) {
     <h1>Welcome, @Username</h1>
-    <a href="Browse/@Username">Browse</a>
+    <FileBrowser Path=@Path />
 } else {
     <h1>Hello, world!</h1>
+    <a href="login">Login</a>
 }
-<a href="login">Login</a>
 
 @code {
     private string? Username { get; set; }
+
+    
+    [Parameter]
+    public string Path { get; set; } = string.Empty;
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
