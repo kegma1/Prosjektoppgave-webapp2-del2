@@ -12,6 +12,7 @@ builder.Services.AddScoped(sp =>
         BaseAddress = new Uri("http://localhost:5186/api/")
     });
 builder.Services.AddHttpClient();
+builder.Services.AddScoped<FileSystemService>();
 
 var app = builder.Build();
 
