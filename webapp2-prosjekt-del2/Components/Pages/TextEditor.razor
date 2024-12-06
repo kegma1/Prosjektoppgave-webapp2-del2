@@ -1,0 +1,21 @@
+@page "/View/{**Path}"
+@using Microsoft.AspNetCore.Components.Server.ProtectedBrowserStorage
+@inject ProtectedLocalStorage ProtectedLocalStore
+@using webapp2_prosjekt_del2.Components.Shared
+
+<PageTitle>View</PageTitle>
+
+
+@code {
+    [Parameter]
+    public string Path { get; set; } = string.Empty;
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            Path = "/" + Path;
+            StateHasChanged();
+        }
+    }
+}

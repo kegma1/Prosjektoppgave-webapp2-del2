@@ -31,7 +31,7 @@ public class FileSystemService {
 
     }
 
-    private string GetVirtualPath(Folder folder) {
+    public string GetVirtualPath(Folder folder) {
         if (folder.parentFolder != null) {
             return  GetVirtualPath(folder.parentFolder) + "/" + folder.name;
         } else {
