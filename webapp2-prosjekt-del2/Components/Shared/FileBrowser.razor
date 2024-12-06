@@ -11,19 +11,37 @@
 
 <div>
     <dir class="d-flex justify-content-between p-0">
-        <button type="button" class="btn btn-primary" @onclick="createDocument">
-            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
-                <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
-                <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
-            </svg> 
-            Document
-        </button>
-        
-        <EditForm Model="Model" OnSubmit="createFolder" class="d-flex">
+        <EditForm Model="DocumentModel" OnSubmit="createDocument" class="d-flex">
+            <AntiforgeryToken />
+            <div class="form-group d-flex align-items-center">
+                <label class="text-nowrap">New document name</label>
+                <InputText class="form-control" @bind-Value="DocumentModel!.documentName" />
+            </div>
+            <button type="submit" class="btn btn-primary">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
+                    <path d="M14 1a1 1 0 0 1 1 1v12a1 1 0 0 1-1 1H2a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1zM2 0a2 2 0 0 0-2 2v12a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V2a2 2 0 0 0-2-2z"/>
+                    <path d="M8 4a.5.5 0 0 1 .5.5v3h3a.5.5 0 0 1 0 1h-3v3a.5.5 0 0 1-1 0v-3h-3a.5.5 0 0 1 0-1h3v-3A.5.5 0 0 1 8 4"/>
+                </svg> 
+            </button>
+        </EditForm>
+
+        <EditForm Model="UploadModel" OnSubmit="uploadFile" class="d-flex" enctype="multipart/form-data">
+            <AntiforgeryToken />
+            <InputFile OnChange="OnFileChange" />
+
+            <button type="submit" class="btn btn-primary" disabled="@IsSubmitting">
+                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-arrow-bar-up" viewBox="0 0 16 16">
+                    <path fill-rule="evenodd" d="M8 10a.5.5 0 0 0 .5-.5V3.707l2.146 2.147a.5.5 0 0 0 .708-.708l-3-3a.5.5 0 0 0-.708 0l-3 3a.5.5 0 1 0 .708.708L7.5 3.707V9.5a.5.5 0 0 0 .5.5m-7 2.5a.5.5 0 0 1 .5-.5h13a.5.5 0 0 1 0 1h-13a.5.5 0 0 1-.5-.5"/>
+                </svg>
+                Upload
+            </button>
+        </EditForm>
+
+        <EditForm Model="FolderModel" OnSubmit="createFolder" class="d-flex">
             <AntiforgeryToken />
             <div class="form-group d-flex align-items-center">
                 <label class="text-nowrap">New folder name</label>
-                <InputText class="form-control" @bind-Value="Model!.folderName" />
+                <InputText class="form-control" @bind-Value="FolderModel!.folderName" />
             </div>
             <button type="submit" class="btn btn-primary">
                 <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-plus-square-fill" viewBox="0 0 16 16">
@@ -49,32 +67,44 @@
                 <th scope="col">Type</th>
                 <th scope="col">name</th>
                 <th scope="col">Date</th>
+                <th scope="col"></th>
             </tr>
         </thead>
         <tbody>
-        @foreach (var folder in content.folders) {
-            <tr style="cursor: pointer;" onclick="location.href='@($"/Browse{@Path}/{@folder.name}")'">
-                <td scope="row">📁</td>
-                <td>@folder.name</td>
-                <td></td>
-            </tr>
-        }
-        @foreach (var document in content.documents) {
-            <tr style="cursor: pointer;" onclick="location.href='@($"/View{@Path}/{@document.title}")'">
-                <td scope="row">🧾</td>
-                <td>@document.title</td>
-                <td>@document.createdDate</td>
-            </tr>
-        }
+            @foreach (var folder in content.folders) {
+                <tr>
+                    <td scope="row">📁</td>
+                    <td style="cursor: pointer;" onclick="location.href='@($"/Browse{@Path}/{@folder.name}")'">@folder.name</td>
+                    <td></td>
+                    <td>
+                        <DeleteButton File=@folder />
+                        <EditButton File=@folder OnClick="() => ShowRenamePopup(folder)" />
+                    </td>
+                </tr>
+            }
+            @foreach (var document in content.documents) {
+                <tr>
+                    <td scope="row">🧾</td>
+                    <td style="cursor: pointer;" onclick="location.href='@($"/View{@Path}/{@document.name}")'">@document.name</td>
+                    <td>@document.createdDate</td>
+                    <td>
+                        <DeleteButton File=@document />
+                        <EditButton File=@document OnClick="() => ShowRenamePopup(document)" />
+                    </td>
+                </tr>
+            }
         </tbody>
 
     </table>
 
+    <RenamePopup file=@fileToRename Visible=@isRenaming OnSubmit="HandleRenameSubmit" Path=@Path />
+
+
     <style>
         .add-item-button {
-            text-align: center;
-            vertical-align: middle;
-            cursor: pointer
+        text-align: center;
+        vertical-align: middle;
+        cursor: pointer
         }
     </style>
 </div>
@@ -82,13 +112,26 @@
 @code {
     [Required]
     [Parameter] public string Path { get; set; } = string.Empty;
-    
+
     private Folder? currentFolder { get; set; }
     private ContentModel content { get; set; } = new();
+
+    private bool isRenaming = false;
+    private IFile? fileToRename { get; set; }
 
     private class ContentModel {
         public List<Folder> folders { get; set; } = new();
         public List<Document> documents { get; set; } = new();
+    }
+
+    private void ShowRenamePopup(IFile file) {
+        fileToRename = file;
+        isRenaming = true;
+    }
+
+    private void HandleRenameSubmit() {
+        isRenaming = false;
+        fileToRename = null;
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -126,20 +169,20 @@
             req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
             var res = await Http.SendAsync(req);
             res.EnsureSuccessStatusCode();
-            
+
             content = await res.Content.ReadFromJsonAsync<ContentModel>();
         }
     }
 
     private async Task createFolder() {
-        if (string.IsNullOrEmpty(Model?.folderName))
+        if (string.IsNullOrEmpty(FolderModel?.folderName))
             return;
-        
+
         if (currentFolder == null)
             return;
 
-        if (FileSystemService.GetFolder($"{Path}/{Model?.folderName}") != null) {
-            Model.folderName = string.Empty;
+        if (FileSystemService.GetFile($"{Path}/{FolderModel?.folderName}") != null) {
+            FolderModel.folderName = string.Empty;
             return;
         }
 
@@ -151,14 +194,14 @@
 
         var req = new HttpRequestMessage(HttpMethod.Post, $"Folder");
         req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
-        req.Content = JsonContent.Create(new {name = Model?.folderName, parentId = currentFolder.id});
+        req.Content = JsonContent.Create(new {name = FolderModel?.folderName, parentId = currentFolder.id});
 
         var res = await Http.SendAsync(req);
         res.EnsureSuccessStatusCode();
 
         await FileSystemService.InitializeFileSystemAsync(token);
         _navigationManager.Refresh(true);
-        Model.folderName = string.Empty;
+        FolderModel.folderName = string.Empty;
     }
 
     private class newFolder {
@@ -166,20 +209,119 @@
     }
 
     [SupplyParameterFromForm]
-    private newFolder? Model { get; set; }
-    protected override void OnInitialized() => Model ??= new();
+    private newFolder? FolderModel { get; set; }
     private async Task createDocument() {
+        if (string.IsNullOrEmpty(DocumentModel?.documentName))
+            return;
 
+        if (currentFolder == null)
+            return;
+
+        if (FileSystemService.GetFile($"{Path}/{DocumentModel.documentName}") != null) {
+            DocumentModel.documentName = string.Empty;
+            return;
+        }
+
+        var result = await ProtectedLocalStore.GetAsync<string>("token");
+        var token = result.Success ? result.Value : null;
+
+        if (token == null)
+            return;
+
+        var req = new HttpRequestMessage(HttpMethod.Post, $"Document");
+        req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+        req.Content = JsonContent.Create(new {name = DocumentModel?.documentName, folderId = currentFolder.id, content=""});
+
+        var res = await Http.SendAsync(req);
+        res.EnsureSuccessStatusCode();
+
+        await FileSystemService.InitializeFileSystemAsync(token);
+        _navigationManager.NavigateTo($"View{Path}/{DocumentModel?.documentName}", true);
     }
+
+    private class newDocument {
+        public string? documentName { get; set; }
+    }
+
+    [SupplyParameterFromForm]
+    private newDocument? DocumentModel { get; set; }
 
     private void moveUpDirectory() {
         if (currentFolder == null)
             return;
-        
+
         if (currentFolder.parentFolder == null)
             return;
 
         var parentPath = FileSystemService.GetVirtualPath(currentFolder.parentFolder);
         _navigationManager.NavigateTo($"Browse{parentPath}", true);
+    }
+
+    private class newUpload {
+        public IBrowserFile? File { get; set; }
+    }
+
+
+    [SupplyParameterFromForm]
+    private newUpload? UploadModel { get; set; }
+    private bool IsSubmitting = false;
+
+    private void OnFileChange(InputFileChangeEventArgs e) {
+        UploadModel.File = e.File;
+    }
+
+    private async Task uploadFile() {
+        if (currentFolder == null)
+            return;
+
+        @* if (FileSystemService.GetFile($"{Path}/{DocumentModel.documentName}") != null) {
+            DocumentModel.documentName = string.Empty;
+            return;
+        } *@
+
+        var result = await ProtectedLocalStore.GetAsync<string>("token");
+        var token = result.Success ? result.Value : null;
+
+        if (token == null)
+            return;
+
+        IsSubmitting = true;
+
+        try {
+            var content = new MultipartContent("form-data", Guid.NewGuid().ToString());
+
+            var fileContent = new StreamContent(UploadModel!.File!.OpenReadStream());
+            fileContent.Headers.ContentType = new System.Net.Http.Headers.MediaTypeHeaderValue(UploadModel.File.ContentType);
+            fileContent.Headers.ContentDisposition = new System.Net.Http.Headers.ContentDispositionHeaderValue("form-data"){
+                Name = "\"file\"",
+                FileName = $"\"{UploadModel.File.Name}\""
+            };
+            content.Add(fileContent);
+
+            Console.WriteLine($"Multipart content: {content.ToString()}");
+            
+            var req = new HttpRequestMessage(HttpMethod.Post, $"Document/upload-image?folderId={currentFolder.id}") {
+                Content = content
+            };
+            req.Headers.Authorization = new AuthenticationHeaderValue("Bearer", token);
+
+            Console.WriteLine(req.ToString());
+
+            var res = await Http.SendAsync(req);
+            res.EnsureSuccessStatusCode();
+            
+            await FileSystemService.InitializeFileSystemAsync(token);
+            _navigationManager.Refresh(true);
+        } catch (Exception e) {
+            Console.WriteLine(e);
+        } finally {
+            IsSubmitting = false;
+        }
+
+    }
+    protected override void OnInitialized() {
+        FolderModel ??= new();
+        DocumentModel ??= new();
+        UploadModel ??= new();
     }
 }

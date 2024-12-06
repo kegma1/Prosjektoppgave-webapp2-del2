@@ -9,7 +9,7 @@ builder.Services.AddRazorComponents()
 builder.Services.AddScoped(sp =>
     new HttpClient
     {
-        BaseAddress = new Uri("http://localhost:5186/api/")
+        BaseAddress = new Uri($"http://localhost:5186/api/")
     });
 builder.Services.AddHttpClient();
 builder.Services.AddScoped<FileSystemService>();
